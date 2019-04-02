@@ -40,7 +40,7 @@
 %% Supported options:
 %%
 %% * `time_span' (default: `60000') size of the window in milliseconds.
-%% * `slot_period' (default: `1000') size of the time slots in milliseconds.
+%% * `slot_period' (default: `10') size of the time slots in milliseconds.
 %% * `histogram_module' (default: `exometer_slot_slide').
 %% * `truncate' (default: `true') whether to truncate the datapoint values.
 %%     Supported values: `true | false | round', where `round' means to round
@@ -80,18 +80,11 @@
 -export([test_run/1, test_run/2,
          test_series/0]).
 
-%% -compile({parse_transform, exometer_igor}).
-%% -compile({igor, [{files, ["src/exometer_util.erl"
-%%                           , "src/exometer_proc.erl"
-%%                           , "src/exometer_slot_slide.erl"
-%%                           , "src/exometer_slide.erl"
-%%                          ]}]}).
-
 -include("exometer.hrl").
 
 -record(st, {name,
              slide = undefined, %%
-             slot_period = 1000, %% msec
+             slot_period = 10, %% msec
              time_span = 60000, %% msec
              truncate = true,
              histogram_module = exometer_slot_slide,
@@ -112,10 +105,7 @@ probe_init(Name, _Type, Options) ->
     {ok, init_state(Name, Options)}.
 
 init_state(Name, Options) ->
-    St = process_opts(#st{name = Name},
-                      [{histogram_module, exometer_slot_slide},
-                       {time_span, 60000},
-                       {slot_period, 10}] ++ Options),
+    St = process_opts(#st{name = Name}, Options),
     Slide = (St#st.histogram_module):new(St#st.time_span,
                                          St#st.slot_period,
                                          fun average_sample/3,
